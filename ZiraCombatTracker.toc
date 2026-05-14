@@ -1,0 +1,9 @@
+## Interface: 120000
+## Title: Zira Combat Tracker
+## Notes: Displays a movable combat banner with simple settings.
+## Author: GitHub Copilot
+## Version: 1.0.0
+## SavedVariables: ZiraCombatTrackerDB
+## OptionalDeps: LibSharedMedia-3.0
+
+ZiraCombatTracker.lua
