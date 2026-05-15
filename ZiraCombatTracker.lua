@@ -26,6 +26,7 @@ local state = {
     previewCheckbox = nil,
     hideToken = 0,
     isDragging = false,
+    suppressLayoutReveal = false,
 }
 
 local eventFrame = CreateFrame("Frame")
@@ -121,7 +122,10 @@ local function UpdateMovableState()
     end
 
     if state.text then
-        if canMove and (ZiraCombatTrackerDB.preview or not state.frame:IsShown()) then
+        if canMove and state.suppressLayoutReveal and not ZiraCombatTrackerDB.preview then
+            state.frame:Hide()
+            state.suppressLayoutReveal = false
+        elseif canMove and (ZiraCombatTrackerDB.preview or not state.frame:IsShown()) then
             state.frame:Show()
             state.text:SetText(ZiraCombatTrackerDB.enterText)
             state.text:SetTextColor(1, 1, 1)
@@ -142,6 +146,7 @@ local function ShowBanner(message, color)
 
     state.hideToken = state.hideToken + 1
     local token = state.hideToken
+    state.suppressLayoutReveal = false
 
     state.text:SetText(message)
     state.text:SetTextColor(color.r, color.g, color.b)
@@ -172,6 +177,7 @@ local function RefreshPreview()
     end
 
     if ZiraCombatTrackerDB.preview then
+        state.suppressLayoutReveal = false
         state.hideToken = state.hideToken + 1
         state.text:SetText(ZiraCombatTrackerDB.enterText)
         state.text:SetTextColor(
@@ -376,6 +382,7 @@ local function CreatePreviewCheckbox(parent, anchor)
     checkbox:SetChecked(ZiraCombatTrackerDB.preview)
     checkbox:SetScript("OnClick", function(self)
         ZiraCombatTrackerDB.preview = self:GetChecked() and true or false
+        state.suppressLayoutReveal = false
         RefreshPreview()
         UpdateMovableState()
     end)
@@ -543,8 +550,18 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
         return
     end
 
-    if event == "PLAYER_ENTERING_WORLD" or event == "EDIT_MODE_LAYOUTS_UPDATED" then
+    if event == "PLAYER_ENTERING_WORLD" then
         ApplyPosition()
+        UpdateMovableState()
+        return
+    end
+
+    if event == "EDIT_MODE_LAYOUTS_UPDATED" then
+        state.suppressLayoutReveal = true
+        if not ZiraCombatTrackerDB.preview then
+            state.frame:Hide()
+        end
+
         UpdateMovableState()
     end
 end)
